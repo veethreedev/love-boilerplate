@@ -7,6 +7,8 @@ CONFIG_OBJECT      = false
 CONFIG_FILENAME    = "config.ini"
 DEVELOPER_MODE     = true
 IGNORE_CONFIG_FILE = true
+START_STATE = "Game"
+STATE              = false
 
 
 --> Shorthands
@@ -50,6 +52,11 @@ function love.load()
 	})
 	love.window.setTitle( CONFIG.window.title )
 
+	--> Loading states
+	STATES = {}
+	Util.requireDirectory( "state", STATES )
+
+	State:load( STATES[ START_STATE ] )
 end
 
 function initialize_conifg()
@@ -59,46 +66,58 @@ function initialize_conifg()
 	:property( "width", 1280 )
 	:property( "height", 720 )
 	:property( "fullscreen", false )
-	:property( "resizable", true )
+	:property( "resizable", false )
 	
 
 	CONFIG = CONFIG_OBJECT:getTable()
 end
 
 function save_config()
-	
+	CONFIG_OBJECT:save( CONFIG_FILENAME )
 end
 
 function love.update( dt )
+	State:update( dt )
+end
 
+function draw_debug()
+	if not DEVELOPER_MODE then return end
+
+	lg.setColor( 1, 0, 1 )
+	lg.print( love.timer.getFPS(), 12, 12 )
 end
 
 function love.draw()
+	State:draw()
 
+	draw_debug()
 end
 
 function love.resize( width, height )
+	State:resize( width, height )
 	CONFIG.window.width, CONFIG.window.height = width, height
 end
 
 function love.mousepressed( x, y, b )
-
+	State:mousepressed( x, y, b )
 end
 
 function love.mousereleased( x, y, b )
-
+	State:mousereleased( x, y, b )
 end
 
 function love.keypressed( key )
+	State:keypressed( key )
 	if DEVELOPER_MODE and key == "escape" then
 		love.event.push( "quit" )
 	end
 end
 
 function love.keyreleased( key )
-
+	State:keyreleased( key )
 end
 
 function love.quit()
-	CONFIG_OBJECT:save( CONFIG_FILENAME )
+	State:quit()
+	save_config()
 end
